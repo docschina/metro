@@ -1,12 +1,12 @@
 ---
 id: troubleshooting
-title: Troubleshooting
+title: 故障排除
 ---
 
-Uh oh, something went wrong? Use this guide to resolve issues with Metro.
+如果遇到了问题，请使用本指南解决 Metro 相关疑难。
 
 *TODO*
 
-### Still unresolved?
+### 仍未解决？
 
-See [Help](/metro/help.html).
+请参阅[帮助](/metro/help.html)。
