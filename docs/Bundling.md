@@ -1,23 +1,23 @@
 ---
 id: bundling
-title: Bundling
+title: 构建
 ---
 
-When bundling, each of the modules gets assigned a numeric id, meaning no dynamic requires are supported. Requires are changed by its numeric version, and modules are stored in different possible formats. Three different formats of bundling are supported:
+构建时，每个模块都会分配一个数字 ID，这意味着不支持动态引入。引入会因其数字版本而改变，模块可能以不同的格式存储。支持三种不同的构建方式：
 
-## Plain bundle
+## 普通 bundle
 
-This is the standard bundling format. In this format, all files are wrapped with a function call, then added to the global file. This is useful for environments that expect a JS only bundle (e.g. a browser). Just requiring the entry point with the `.bundle` extension should trigger a build of it.
+这是标准的构建方式。在这种格式中，所有文件都用函数调用包装，然后添加到全局文件中。这对于期望只是用 JS bundle 的环境（例如，浏览器）很有用处。仅仅需要具有 `.bundle` 后缀的入口起点应该使用该方式构建。
 
-## Indexed RAM bundle
+## RAM 索引 bundle
 
-This format composes the bundle as a binary file, which format has the following parts (all numbers are expressed in Little Endian):
+这种格式将 bundle 组成一个二进制文件，该格式包含以下部分（所有数字都使用小字符顺序表示）：
 
-* A magic number: a `uint32` must be located at the beginning of the file, with the value `0xFB0BD1E5`. This is used to verify the file.
-* An offset table: the table is a sequence of `uint32` pairs, with a header
-    * For the header, two `uint32`s can be found: the length of the table, and the length of the startup code.
-    * For the pairs, they represent the offset in the file and the length of code module, in bytes.
-* Each of the modules, finished by a null byte (`\0`).
+* 魔术数字（译注，一般是指硬写到代码里的整数常量）: `uint32` 必须位于文件的开头，值为 `0xFB0BD1E5`。这用于校验文件。
+* 偏移表: 该表是一系列 `uint32` 数值对，带有 header
+    * 对于 header，可以找到两个 `uint32`：header 的长度和 startup 的长度
+    * 对于数值对，它们表示文件中的偏移量和代码模块的长度，以字节为单位。
+* 每个模块，由空字节（`\0`）结束。
 
 ```
 ` 0                   1                   2                   3                   4                   5                   6
@@ -47,14 +47,14 @@ This format composes the bundle as a binary file, which format has the following
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+`
 ```
 
-This structure is optimal for an environment that is able to load all code in memory at once:
+这种结构对于能在内存一次加载所有代码的环境来说是最佳的：
 
-* By using the offset table, one can load any module in constant time, where the code for module `x` is located at `file[(x + 3) * sizeof(uint32)]`. Since there is a null character (`\0`) separating all modules, usually length does not even need to be used, and the module can be loaded directly as an ASCIIZ string.
-* Startup code is always found at `file[sizeof(uint32)]`.
+* 通过使用偏移量表，可以在恒定时间内加载任何模块，其中模块 `x` 的代码位于 `file[(x + 3) * sizeof(uint32)]` 的位置。由于存在分隔模块的空字符串（`\0`），通常不需要使用长度，并且模块可以直接作为 ASCIIZ 字符串加载。
+* Startup 代码能在 `file[sizeof(uint 32)]` 中找到。
 
-This bundling is usually used by iOS.
+这种构建方式通常用于 iOS。
 
-## File RAM bundle
+## 文件 RAM bundle
 
-Each module is stored as a file, with the name `js-modules/${id}.js`, plus an extra file called `UNBUNDLE` is created, which its only content is the magic number, `0xFB0BD1E5`. Note that the `UNBUNDLE` file is created at the root.
-This bundling is usually used by Android, since package contents are zipped, and access to a zipped file is much faster. If the indexed format was used instead, all the bundled should be unzipped at once to get the code for the corresponding module.
+每个模块都存储为一个文件，名称为 `js-modules/${id}.js`，另外还创建一个名为 `UNBUNDLE` 的额外文件，其中唯一的内容是魔术数字，`0xFB0BD1E5`。请注意，`UNBUNDLE` 文件是在根目录下创建的。
+这种构建方式通常用于 Android，因为包内容是压缩的，并且对压缩文件的访问会更快。如果使用索引方式，则应对所有 bundle 的内容进行解压缩，以获取相应模块的代码。
