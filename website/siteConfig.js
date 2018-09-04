@@ -10,17 +10,17 @@
 
 const siteConfig = {
   title: 'Metro',
-  tagline: '🚇 The JavaScript bundler for React Native',
+  tagline: '🚇 React Native 的 JavaScript 构建工具',
   url: 'https://facebook.github.io',
   baseUrl: '/metro/',
   projectName: 'metro',
   repo: 'facebook/metro',
   editUrl: 'https://github.com/facebook/metro/edit/master/docs/',
   headerLinks: [
-    {doc: 'getting-started', label: 'Docs'},
+    {doc: 'getting-started', label: '文档'},
     {doc: 'api', label: 'API'},
-    {page: 'help', label: 'Help'},
-    {blog: true, label: 'Blog'},
+    {page: 'help', label: '帮助'},
+    {blog: true, label: '博客'},
     {languages: true},
     {search: true},
     {href: 'https://github.com/facebook/metro', label: 'GitHub'},

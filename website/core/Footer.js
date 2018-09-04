@@ -33,7 +33,7 @@ class Footer extends React.Component {
             />
           </a>
           <div>
-            <h5>Docs</h5>
+            <h5>文档</h5>
             <a
               href={
                 this.props.config.baseUrl +
@@ -42,7 +42,7 @@ class Footer extends React.Component {
                 '/getting-started.html'
               }
             >
-              Getting Started
+              快速开始
             </a>
             <a
               href={
@@ -52,11 +52,11 @@ class Footer extends React.Component {
                 '/api.html'
               }
             >
-              API Reference
+              API 文档
             </a>
           </div>
           <div>
-            <h5>Community</h5>
+            <h5>社区</h5>
             <a
               href="https://stackoverflow.com/questions/tagged/metrojs"
               target="_blank"
@@ -68,8 +68,8 @@ class Footer extends React.Component {
             </a>
           </div>
           <div>
-            <h5>More</h5>
-            <a href={this.props.config.baseUrl + 'blog'}>Blog</a>
+            <h5>更多</h5>
+            <a href={this.props.config.baseUrl + 'blog'}>博客</a>
             <a href="https://github.com/facebook/metro">GitHub</a>
             {githubButton}
           </div>

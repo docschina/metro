@@ -12,7 +12,6 @@ const React = require('react');
 const Container = CompLibrary.Container;
 const GridBlock = CompLibrary.GridBlock;
 
-const translate = require('../../server/translate.js').translate;
 const translation = require('../../server/translation.js');
 
 const siteConfig = require(process.cwd() + '/siteConfig.js');
@@ -80,7 +79,7 @@ class HomeSplash extends React.Component {
                         '/getting-started.html'
                       }
                     >
-                      <translate>Get Started</translate>
+                      快速入门
                     </Button>
                     <Button
                       href={
@@ -90,7 +89,7 @@ class HomeSplash extends React.Component {
                         '/api.html'
                       }
                     >
-                      <translate>Learn More</translate>
+                      了解更多
                     </Button>
                   </div>
                 </div>
@@ -118,33 +117,27 @@ class Index extends React.Component {
               contents={[
                 {
                   content: (
-                    <translate>
-                      Metro aims for sub-second reload cycles, fast startup and quick bundling speeds.
-                    </translate>
+                    `Metro 旨在实现亚秒级循环重载，快速启动以及快速构建。`
                   ),
                   image: '/metro/img/content/high-speed-train.png',
                   imageAlign: 'top',
-                  title: <translate>Fast</translate>,
+                  title: '快速',
                 },
                 {
                   content: (
-                    <translate>
-                      Works with thousands of modules in a single application.
-                    </translate>
+                    `在单应用中使用数以千计的模块。`
                   ),
                   image: '/metro/img/content/scales.png',
                   imageAlign: 'top',
-                  title: <translate>Scalable</translate>,
+                  title: '可扩展',
                 },
                 {
                   content: (
-                    <translate>
-                      Supports every React Native project out of the box.
-                    </translate>
+                    `开箱即用，支持任意的 ReactNative 项目。`
                   ),
                   image: '/metro/img/content/atom.png',
                   imageAlign: 'top',
-                  title: <translate>Integrated</translate>,
+                  title: '便于集成',
                 },
               ]}
               layout="fourColumn"
