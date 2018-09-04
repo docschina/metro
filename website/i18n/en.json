@@ -3,7 +3,7 @@
   "localized-strings": {
     "next": "Next",
     "previous": "Previous",
-    "tagline": "🚇 The JavaScript bundler for React Native",
+    "tagline": "🚇 React Native 的 JavaScript 构建工具",
     "api": "API",
     "bundling": "Bundling",
     "caching": "Caching",
