@@ -18,7 +18,7 @@ aliases:
       # install Docusaurus and generate file of English strings
       cd website && yarn && yarn run write-translations
       # build and publish website
-      GIT_USER=docschina yarn run publish-gh-pages
+      GIT_USER=QC-L CURRENT_BRANCH=cn USE_SSH=true yarn run publish-gh-pages
 
 version: 2
 jobs:
