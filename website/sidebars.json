@@ -1,17 +1,17 @@
 {
   "docs": {
-    "Introduction": [
+    "介绍": [
       "getting-started",
       "concepts",
       "bundling",
       "caching"
     ],
-    "API Reference": [
+    "API 文档": [
       "api",
       "configuration",
       "cli"
     ],
-    "Guides": [
+    "指南": [
       "troubleshooting"
     ]
   }
