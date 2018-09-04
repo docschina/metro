@@ -6,7 +6,7 @@
     "tagline": "🚇 React Native 的 JavaScript 构建工具",
     "api": "API",
     "bundling": "构建",
-    "caching": "Caching",
+    "caching": "缓存",
     "cli": "Metro CLI Options",
     "concepts": "概念",
     "configuration": "Configuring Metro",
