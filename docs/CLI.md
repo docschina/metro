@@ -1,22 +1,21 @@
 ---
 id: cli
-title: Metro CLI Options
+title: Metro CLI 选项
 ---
 
-The `metro` command line runner has a number of useful options. You can run `metro
---help` to view all available options. Here is a brief overview:
+`metro` 命令行运行器有许多有用的选项。你可以运行 `metro --help` 来查看所有可用选项。以下是简要概述：
 
 ## `build <entry>`
 
-Generates a JavaScript bundle containing the specified entrypoint and its descendants.
+生成包含指定入口起点及其后代的 JavaScript bundle。
 
-### Options
+### 选项
 
-| Option   | Description    |
+| 选项   | 描述    |
 |----------|----------|
-| `out`    | Location of the output      |
+| `out`    | 输出的位置      |
 
 
 ## `serve`
 
-Starts a Metro server on the given port, building bundles on the fly.
+在给定的端口上启动 Metro 服务器，实时构建 Bundle。
