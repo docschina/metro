@@ -1,42 +1,42 @@
 ---
 id: configuration
-title: Configuring Metro
+title: 配置 Metro
 ---
 
-A Metro config can be created in these three ways (ordered by priority):
+可以使用以下三种方式创建 Metro 配置（按优先级排序）：
 
 1.  `metro.config.js`
 2.  `metro.config.json`
-3.  The `metro` field in `package.json`
+3.  `package.json` 中的 `metro` 字段
 
-You can also give a custom file to the configuration by specifying `--config <path/to/config>` when calling the CLI.
+你还可以通过调用 CLI 时指定 `--config <path/to/config>` 提供自定义配置文件。
 
-## Configuration Structure
+## 配置结构
 
-The configuration is based on [our concepts](./Concepts.md), which means that for every module we have a separate config option. A common configuration structure in Metro looks like this:
+基于[概念](./Concepts.md)进行配置，这意味着对于每个模块，我们都有一个单独的配置选项。Metro 中常见的配置结构如下所示：
 
 ```js
 module.exports = {
   resolver: {
-    /* resolver options */
+    /* 解析器选项 */
   },
   transformer: {
-    /* transformer options */
+    /* 转译器选项 */
   },
   serializer: {
-    /* serializer options */
+    /* 序列化器选项 */
   },
   server: {
-    /* server options */
+    /* 服务器选项 */
   }
 
-  /* general options */
+  /* 通用选项 */
 };
 ```
 
-### General Options
+### 常规选项
 
-| Option                  | Type                                  | Description                                                                                       |
+| 选项                  | 类型                                  | 描述                                                                                       |
 | ----------------------- | ------------------------------------- | ------------------------------------------------------------------------------------------------- |
 | `cacheStores`           | `Array<CacheStore<TransformResult<>>` | List where we store our [caches](./Caching.md).                                                   |
 | `cacheVersion`          | `string`                              | Can be used to generate a key that will invalidate the whole metro cache.                         |
