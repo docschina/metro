@@ -10,3 +10,6 @@ website/build/
 website/i18n/*
 website/node_modules
 website/translated_docs
+.circleci/deploy_key
+.circleci/deploy_key.pub
+simple-circle-ci.sh

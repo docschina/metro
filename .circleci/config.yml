@@ -1,0 +1,39 @@
+aliases:
+  - &restore-cache
+    keys:
+      - dependencies-{{ .Branch }}-{{ checksum "package.json" }}
+      # Fallback in case checksum fails
+      - dependencies-{{ .Branch }}-
+
+  - &save-cache
+    paths:
+      - node_modules
+    key: dependencies-{{ .Branch }}-{{ checksum "package.json" }}
+
+  - &deploy-website
+    command: |
+      # Deploy Metro website
+      git config --global user.email "github@liqichang.com"
+      git config --global user.name "QC-L"
+      # install Docusaurus and generate file of English strings
+      cd website && yarn && yarn run write-translations
+      # build and publish website
+      GIT_USER=docschina yarn run publish-gh-pages
+
+version: 2
+jobs:
+  build:
+    docker:
+      - image: circleci/node:8.10.0
+    working_directory: ~/metro
+    steps:
+      - add_ssh_keys:
+          fingerprints:
+            - "35:48:95:d2:2f:f6:4d:2d:6c:82:e7:ce:43:f8:6d:49"
+      - checkout
+      - restore-cache: *restore-cache
+      - run: |
+          cd website
+          yarn --no-progress
+      - save-cache: *save-cache
+      - deploy: *deploy-website                 
