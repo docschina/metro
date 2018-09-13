@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2016-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -20,7 +20,10 @@ const generate = require('@babel/generator').default;
 const getMinifier = require('../lib/getMinifier');
 const importExportPlugin = require('./worker/import-export-plugin');
 const inlinePlugin = require('./worker/inline-plugin');
+const inlineRequiresPlugin = require('babel-preset-fbjs/plugins/inline-requires');
 const normalizePseudoglobals = require('./worker/normalizePseudoglobals');
+const {transformFromAstSync} = require('@babel/core');
+const traverse = require('@babel/traverse').default;
 
 const {
   fromRawMappings,
@@ -55,6 +58,7 @@ export type Transformer = {
 };
 
 export type MinifyOptions = {
+  filename?: string,
   reserved?: $ReadOnlyArray<string>,
 };
 
@@ -67,6 +71,7 @@ export type WorkerOptions = {|
   +babelTransformerPath: string,
   +dynamicDepsInPackages: DynamicRequiresBehavior,
   +minifierPath: string,
+  +optimizationSizeLimit: number,
   +transformOptions: TransformOptions,
   +type: Type,
 |};
@@ -149,25 +154,20 @@ async function transform(
     return {dependencies: [], output: [{data: {code, map}, type}]};
   }
 
-  const plugins = options.transformOptions.dev
-    ? []
-    : [
-        [inlinePlugin, options.transformOptions],
-        [constantFoldingPlugin, options.transformOptions],
-      ];
-
-  if (options.transformOptions.experimentalImportSupport) {
-    plugins.push([importExportPlugin, options.transformOptions]);
-  }
-
   // $FlowFixMe TODO t26372934 Plugin system
   const transformer: Transformer<*> = require(options.babelTransformerPath);
 
   const transformerArgs = {
     filename,
     localPath,
-    options: options.transformOptions,
-    plugins,
+    options: {
+      ...options.transformOptions,
+      // Inline requires are now performed at a secondary step. We cannot
+      // unfortunately remove it from the internal transformer, since this one
+      // is used by other tooling, and this would affect it.
+      inlineRequires: false,
+    },
+    plugins: [],
     src: sourceCode,
   };
 
@@ -182,8 +182,54 @@ async function transform(
 
   // Transformers can ouptut null ASTs (if they ignore the file). In that case
   // we need to parse the module source code to get their AST.
-  const ast =
+  let ast =
     transformResult.ast || babylon.parse(sourceCode, {sourceType: 'module'});
+
+  // Select unused names for "metroImportDefault" and "metroImportAll", by
+  // calling "generateUid".
+  let importDefault = '';
+  let importAll = '';
+
+  traverse(ast, {
+    Program(path) {
+      importAll = path.scope.generateUid('$$_IMPORT_ALL');
+      importDefault = path.scope.generateUid('$$_IMPORT_DEFAULT');
+    },
+  });
+
+  // Perform the import-export transform (in case it's still needed), then
+  // fold requires and perform constant folding (if in dev).
+  const plugins = [];
+  const opts = {
+    ...options.transformOptions,
+    inlineableCalls: [importDefault, importAll],
+    importDefault,
+    importAll,
+  };
+
+  if (options.transformOptions.inlineRequires) {
+    plugins.push([inlineRequiresPlugin, opts]);
+  }
+
+  if (!options.transformOptions.dev) {
+    plugins.push([constantFoldingPlugin, opts]);
+    plugins.push([inlinePlugin, opts]);
+  }
+
+  if (options.transformOptions.experimentalImportSupport) {
+    plugins.push([importExportPlugin, opts]);
+  }
+
+  ({ast} = transformFromAstSync(ast, '', {
+    ast: true,
+    babelrc: false,
+    code: false,
+    comments: false,
+    compact: false,
+    filename: localPath,
+    plugins,
+    sourceMaps: false,
+  }));
 
   let dependencyMapName = '';
   let dependencies;
@@ -214,12 +260,19 @@ async function transform(
       throw error;
     }
 
-    ({ast: wrappedAst} = JsFileWrapping.wrapModule(ast, dependencyMapName));
+    ({ast: wrappedAst} = JsFileWrapping.wrapModule(
+      ast,
+      importDefault,
+      importAll,
+      dependencyMapName,
+    ));
   }
 
-  const reserved = options.transformOptions.minify
-    ? normalizePseudoglobals(wrappedAst)
-    : [];
+  const reserved =
+    options.transformOptions.minify &&
+    data.length <= options.optimizationSizeLimit
+      ? normalizePseudoglobals(wrappedAst)
+      : [];
 
   const result = generate(
     wrappedAst,

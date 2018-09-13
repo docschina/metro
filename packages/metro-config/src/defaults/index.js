@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -55,6 +55,7 @@ const getDefaultValues = (projectRoot: ?string): IntermediateConfigT => ({
     getModulesRunBeforeMainModule: () => [],
     processModuleFilter: module => true,
     createModuleIdFactory: defaultCreateModuleIdFactory,
+    experimentalSerializerHook: () => {},
   },
 
   server: {
@@ -75,10 +76,11 @@ const getDefaultValues = (projectRoot: ?string): IntermediateConfigT => ({
       preloadedModules: false,
       ramGroups: [],
     }),
-    postMinifyProcess: x => x,
-    workerPath: null,
     minifierPath: DEFAULT_METRO_MINIFIER_PATH,
+    optimizationSizeLimit: 150 * 1024, // 150 KiB.
+    postMinifyProcess: x => x,
     transformVariants: {default: {}},
+    workerPath: null,
   },
 
   cacheStores: [

@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2015-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -13,7 +13,7 @@
 const formatBundlingError = require('./lib/formatBundlingError');
 const getEntryAbsolutePath = require('./lib/getEntryAbsolutePath');
 const hmrJSBundle = require('./DeltaBundler/Serializers/hmrJSBundle');
-const nullthrows = require('fbjs/lib/nullthrows');
+const nullthrows = require('nullthrows');
 const parseCustomTransformOptions = require('./lib/parseCustomTransformOptions');
 const url = require('url');
 
@@ -125,6 +125,8 @@ class HmrServer<TClient: Client> {
 
     try {
       const delta = await deltaBundler.getDelta(client.graph, {reset: false});
+
+      this._config.serializer.experimentalSerializerHook(client.graph, delta);
 
       return hmrJSBundle(delta, client.graph, {
         createModuleId: this._packagerServer._createModuleId,

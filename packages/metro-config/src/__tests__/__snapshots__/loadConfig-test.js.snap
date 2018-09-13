@@ -64,6 +64,7 @@ Object {
   },
   "serializer": Object {
     "createModuleIdFactory": [Function],
+    "experimentalSerializerHook": [Function],
     "getModulesRunBeforeMainModule": [Function],
     "getPolyfills": [Function],
     "getRunModuleStatement": [Function],
@@ -85,6 +86,7 @@ Object {
     "enableBabelRCLookup": true,
     "getTransformOptions": [Function],
     "minifierPath": "metro-minify-uglify",
+    "optimizationSizeLimit": 153600,
     "postMinifyProcess": [Function],
     "transformVariants": Object {
       "default": Object {},
@@ -163,6 +165,7 @@ Object {
   },
   "serializer": Object {
     "createModuleIdFactory": [Function],
+    "experimentalSerializerHook": [Function],
     "getModulesRunBeforeMainModule": [Function],
     "getPolyfills": [Function],
     "getRunModuleStatement": [Function],
@@ -184,6 +187,7 @@ Object {
     "enableBabelRCLookup": true,
     "getTransformOptions": [Function],
     "minifierPath": "metro-minify-uglify",
+    "optimizationSizeLimit": 153600,
     "postMinifyProcess": [Function],
     "transformVariants": Object {
       "default": Object {},

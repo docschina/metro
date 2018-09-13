@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2015-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -40,7 +40,7 @@ const cacheKeyParts = [
 const getBabelRC = (function() {
   let babelRC: ?{extends?: string, plugins: BabelPlugins} = null;
 
-  return function _getBabelRC(projectRoot) {
+  return function _getBabelRC(projectRoot, options) {
     if (babelRC != null) {
       return babelRC;
     }
@@ -78,7 +78,7 @@ const getBabelRC = (function() {
             }
           }
         }
-        return require(name);
+        return [require(name), options];
       });
       babelRC.plugins = babelRC.plugins.map(plugin => {
         // Manually resolve all default Babel plugins.
@@ -112,7 +112,7 @@ const getBabelRC = (function() {
  * config object with the appropriate plugins.
  */
 function buildBabelConfig(filename, options, plugins?: BabelPlugins = []) {
-  const babelRC = getBabelRC(options.projectRoot);
+  const babelRC = getBabelRC(options.projectRoot, options);
 
   const extraConfig = {
     babelrc:
@@ -155,9 +155,6 @@ type Params = {
 
 function transform({filename, options, src, plugins}: Params) {
   const OLD_BABEL_ENV = process.env.BABEL_ENV;
-  /* $FlowFixMe(>=0.68.0 site=react_native_fb) This comment suppresses an error
-   * found when Flow v0.68 was deployed. To see the error delete this comment
-   * and run Flow. */
   process.env.BABEL_ENV = options.dev ? 'development' : 'production';
 
   try {

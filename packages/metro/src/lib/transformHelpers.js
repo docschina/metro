@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2015-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -66,6 +66,7 @@ async function calcTransformerOptions(
     babelTransformerPath: config.transformer.babelTransformerPath,
     dynamicDepsInPackages: config.transformer.dynamicDepsInPackages,
     minifierPath: config.transformer.minifierPath,
+    optimizationSizeLimit: config.transformer.optimizationSizeLimit,
   };
 
   // When we're processing scripts, we don't need to calculate any

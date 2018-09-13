@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2015-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -66,6 +66,7 @@ describe('code transformation worker:', () => {
         babelTransformerPath,
         transformOptions: {dev: true},
         dynamicDepsInPackages: 'reject',
+        optimizationSizeLimit: 100000,
       },
     );
 
@@ -74,7 +75,7 @@ describe('code transformation worker:', () => {
       [
         '(function (global) {',
         '  someReallyArbitrary(code);',
-        "})(typeof global === 'undefined' ? this : global);",
+        "})(typeof window !== 'undefined' ? window : typeof global !== 'undefined' ? global : this);",
       ].join('\n'),
     );
     expect(result.output[0].data.map).toMatchSnapshot();
@@ -96,6 +97,7 @@ describe('code transformation worker:', () => {
         babelTransformerPath,
         transformOptions: {dev: true},
         dynamicDepsInPackages: 'reject',
+        optimizationSizeLimit: 100000,
       },
     );
 
@@ -134,6 +136,7 @@ describe('code transformation worker:', () => {
         babelTransformerPath,
         transformOptions: {dev: true},
         dynamicDepsInPackages: 'reject',
+        optimizationSizeLimit: 100000,
       },
     );
 
@@ -161,6 +164,39 @@ describe('code transformation worker:', () => {
     ]);
   });
 
+  it('keeps import/export syntax if requested to do so', async () => {
+    const contents = ['import c from "./c";'].join('\n');
+
+    const result = await transform(
+      '/root/local/file.js',
+      'local/file.js',
+      contents,
+      {
+        assetExts: [],
+        assetPlugins: [],
+        assetRegistryPath: '',
+        asyncRequireModulePath: 'asyncRequire',
+        isScript: false,
+        minifierPath: 'minifyModulePath',
+        babelTransformerPath,
+        transformOptions: {dev: true, disableImportExportTransform: true},
+        dynamicDepsInPackages: 'reject',
+        optimizationSizeLimit: 100000,
+      },
+    );
+
+    expect(result.output[0].type).toBe('js/module');
+    expect(result.output[0].data.code).toBe(
+      [
+        '__d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, exports, _dependencyMap) {',
+        '  import c from "./c";',
+        '});',
+      ].join('\n'),
+    );
+    expect(result.output[0].data.map).toMatchSnapshot();
+    expect(result.dependencies).toEqual([]);
+  });
+
   it('reports filename when encountering unsupported dynamic dependency', async () => {
     const contents = [
       'require("./a");',
@@ -179,6 +215,7 @@ describe('code transformation worker:', () => {
         babelTransformerPath,
         transformOptions: {dev: true},
         dynamicDepsInPackages: 'reject',
+        optimizationSizeLimit: 100000,
       });
       throw new Error('should not reach this');
     } catch (error) {
@@ -201,6 +238,7 @@ describe('code transformation worker:', () => {
         babelTransformerPath,
         transformOptions: {dev: true},
         dynamicDepsInPackages: 'throwAtRuntime',
+        optimizationSizeLimit: 100000,
       },
     );
   });
@@ -221,6 +259,7 @@ describe('code transformation worker:', () => {
           babelTransformerPath,
           transformOptions: {dev: true, minify: true},
           dynamicDepsInPackages: 'throwAtRuntime',
+          optimizationSizeLimit: 100000,
         },
       )).output[0].data.code,
     ).toBe(
@@ -246,11 +285,12 @@ describe('code transformation worker:', () => {
           babelTransformerPath,
           transformOptions: {dev: true, minify: true},
           dynamicDepsInPackages: 'throwAtRuntime',
+          optimizationsizelimit: 100000,
         },
       )).output[0].data.code,
     ).toBe(
       [
-        '__d(function(global, require, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, exports) {',
+        '__d(function(global, require, _aUnused, _bUnused, module, exports, _cUnused) {',
         '  module.exports = minified(code);;',
         '});',
       ].join('\n'),

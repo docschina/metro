@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2017-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -37,6 +37,8 @@ it('wraps a module correctly', () => {
   `);
   const {ast, requireName} = JsFileWrapping.wrapModule(
     originalAst,
+    '_$$_IMPORT_DEFAULT',
+    '_$$_IMPORT_ALL',
     dependencyMapName,
   );
 
@@ -73,6 +75,8 @@ describe('safe renaming of require', () => {
         `);
         const {ast, requireName} = JsFileWrapping.wrapModule(
           originalAst,
+          '_$$_IMPORT_DEFAULT',
+          '_$$_IMPORT_ALL',
           dependencyMapName,
         );
 
@@ -107,6 +111,8 @@ describe('safe renaming of require', () => {
         `);
         const {ast, requireName} = JsFileWrapping.wrapModule(
           originalAst,
+          '_$$_IMPORT_DEFAULT',
+          '_$$_IMPORT_ALL',
           dependencyMapName,
         );
 
@@ -144,6 +150,8 @@ describe('safe renaming of require', () => {
         `);
         const {ast, requireName} = JsFileWrapping.wrapModule(
           originalAst,
+          '_$$_IMPORT_DEFAULT',
+          '_$$_IMPORT_ALL',
           dependencyMapName,
         );
 
@@ -180,7 +188,9 @@ it('wraps a polyfill correctly', () => {
         if (something) {
           console.log('foo');
         }
-      })(typeof global === 'undefined' ? this : global);`),
+      })(typeof window !== 'undefined' ?
+        window :
+        typeof global !== 'undefined' ? global : this);`),
   );
 });
 
@@ -201,7 +211,7 @@ it('wraps a JSON file correctly', () => {
 
   expect(comparableCode(wrappedJson)).toEqual(
     comparableCode(
-      `__d(function(global, require, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, exports) {
+      `__d(function(global, require, _aUnused, _bUnused, module, exports, _cUnused) {
       module.exports = {
         "foo": "foo",
         "bar": "bar",

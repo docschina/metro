@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2015-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -111,7 +111,7 @@ describe('processRequest', () => {
               },
             ],
           ]),
-          getSource: () => 'code-mybundle',
+          getSource: () => Buffer.from('code-mybundle'),
           output: [
             {
               type: 'js/module',
@@ -128,7 +128,7 @@ describe('processRequest', () => {
         {
           path: '/root/foo.js',
           dependencies: new Map(),
-          getSource: () => 'code-foo',
+          getSource: () => Buffer.from('code-foo'),
           output: [
             {
               type: 'js/module',
@@ -171,7 +171,7 @@ describe('processRequest', () => {
         {
           path: 'require-js',
           dependencies: new Map(),
-          getSource: () => 'code-require',
+          getSource: () => Buffer.from('code-require'),
           output: [
             {
               type: 'js/script',

@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2015-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -26,7 +26,7 @@ const debug = require('debug')('Metro:Server');
 const formatBundlingError = require('./lib/formatBundlingError');
 const getPrependedScripts = require('./lib/getPrependedScripts');
 const mime = require('mime-types');
-const nullthrows = require('fbjs/lib/nullthrows');
+const nullthrows = require('nullthrows');
 const parseCustomTransformOptions = require('./lib/parseCustomTransformOptions');
 const parsePlatformFilePath = require('./node-haste/lib/parsePlatformFilePath');
 const path = require('path');
@@ -189,7 +189,7 @@ class Server {
       getEntryAbsolutePath(this._config, entryFile),
     );
 
-    return await this._deltaBundler.buildGraph(entryFiles, {
+    const graph = await this._deltaBundler.buildGraph(entryFiles, {
       resolve: await transformHelpers.getResolveDependencyFn(
         this._bundler,
         options.platform,
@@ -203,6 +203,14 @@ class Server {
       ),
       onProgress: options.onProgress,
     });
+
+    this._config.serializer.experimentalSerializerHook(graph, {
+      modified: graph.dependencies,
+      deleted: new Set(),
+      reset: true,
+    });
+
+    return graph;
   }
 
   async getRamBundleInfo(options: BundleOptions): Promise<RamBundleInfo> {
@@ -296,6 +304,12 @@ class Server {
       onProgress: options.onProgress,
     });
 
+    this._config.serializer.experimentalSerializerHook(graph, {
+      modified: graph.dependencies,
+      deleted: new Set(),
+      reset: true,
+    });
+
     const prepend = await getPrependedScripts(
       this._config,
       crawlingOptions,
@@ -335,10 +349,14 @@ class Server {
           reset: false,
         });
         numModifiedFiles = delta.modified.size;
-      }
 
-      if (numModifiedFiles > 0) {
-        graphInfo.lastModified = new Date();
+        if (numModifiedFiles > 0) {
+          graphInfo.lastModified = new Date();
+          this._config.serializer.experimentalSerializerHook(
+            graphInfo.graph,
+            delta,
+          );
+        }
       }
     }
 
@@ -370,6 +388,11 @@ class Server {
       delta = await this._deltaBundler.getDelta(graphInfo.graph, {
         reset: graphInfo.sequenceId !== options.deltaBundleId,
       });
+
+      this._config.serializer.experimentalSerializerHook(
+        graphInfo.graph,
+        delta,
+      );
 
       // Generate a new sequenceId, to be used to verify the next delta request.
       // $FlowIssue #16581373 spread of an exact object should be exact

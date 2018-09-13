@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -348,6 +348,12 @@ function loadModuleImplementation(moduleId, module) {
       }
     }
 
+    if (hooks.length > 0) {
+      for (let i = 0; i < hooks.length; ++i) {
+        hooks[i].cb(moduleId, moduleObject);
+      }
+    }
+
     // keep args in sync with with defineModuleCode in
     // metro/src/Resolver/index.js
     // and metro/src/ModuleGraph/worker.js
@@ -366,12 +372,6 @@ function loadModuleImplementation(moduleId, module) {
       // $FlowFixMe: This is only sound because we never access `factory` again
       module.factory = undefined;
       module.dependencyMap = undefined;
-    }
-
-    if (hooks.length > 0) {
-      for (let i = 0; i < hooks.length; ++i) {
-        hooks[i].cb(moduleId, moduleObject);
-      }
     }
 
     if (__DEV__) {

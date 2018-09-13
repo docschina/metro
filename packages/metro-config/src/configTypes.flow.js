@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -15,7 +15,11 @@ import type {IncomingMessage, ServerResponse} from 'http';
 import type {CacheStore} from 'metro-cache';
 import type {CustomResolver} from 'metro-resolver';
 import type {MetroSourceMap} from 'metro-source-map';
-import type {Module} from 'metro/src/DeltaBundler/types.flow.js';
+import type {
+  DeltaResult,
+  Graph,
+  Module,
+} from 'metro/src/DeltaBundler/types.flow.js';
 import type {TransformResult} from 'metro/src/DeltaBundler';
 import type {TransformVariants} from 'metro/src/ModuleGraph/types.flow.js';
 import type {DynamicRequiresBehavior} from 'metro/src/ModuleGraph/worker/collectDependencies';
@@ -345,6 +349,14 @@ export type InputConfigT = $ReadOnly<{
      * contain the absolute path of each module.
      */
     getModulesRunBeforeMainModule?: (entryFilePath: string) => Array<string>,
+
+    /**
+     * Do not use yet, since the Graph API is going to change soon.
+     */
+    experimentalSerializerHook?: (
+      graph: Graph<>,
+      delta: DeltaResult<>,
+    ) => mixed,
   }>,
   transformer?: $ReadOnly<{
     assetRegistryPath?: string,
@@ -450,6 +462,7 @@ export type IntermediateConfigT = {
     getModulesRunBeforeMainModule: (entryFilePath: string) => Array<string>,
     processModuleFilter: (modules: Module<>) => boolean,
     createModuleIdFactory: () => (path: string) => number,
+    experimentalSerializerHook: (graph: Graph<>, delta: DeltaResult<>) => mixed,
   },
   transformer: {
     assetPlugins: Array<string>,
@@ -459,10 +472,11 @@ export type IntermediateConfigT = {
     enableBabelRCLookup: boolean,
     dynamicDepsInPackages: DynamicRequiresBehavior,
     getTransformOptions: GetTransformOptions,
-    postMinifyProcess: PostMinifyProcess,
-    workerPath: ?string,
     minifierPath: string,
+    optimizationSizeLimit: number,
+    postMinifyProcess: PostMinifyProcess,
     transformVariants: TransformVariants,
+    workerPath: ?string,
   },
 
   // Metal

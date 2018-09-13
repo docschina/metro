@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -239,6 +239,11 @@ function moduleToNode(module: Module<>, metroGraph: Graph<>): Node {
       depsSize: deps.reduce(generateSizeAccumulator(metroGraph), 0),
       invDepsSize: inverseDeps.reduce(generateSizeAccumulator(metroGraph), 0),
       type: module.output[0].type,
+      // $FlowFixMe
+      output: module.output[0].data.code,
+      // Converting to base64 here avoids having to bundle an extra base64
+      // implementation for the browser.
+      source: module.getSource().toString('base64'),
     },
   };
 }
