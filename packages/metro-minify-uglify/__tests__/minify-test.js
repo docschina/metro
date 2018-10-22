@@ -33,6 +33,14 @@ function getFakeMap(): BabelSourceMap {
   };
 }
 
+const baseOptions = {
+  code: '',
+  map: getFakeMap(),
+  filename: '',
+  reserved: [],
+  config: {},
+};
+
 describe('Minification:', () => {
   const filename = '/arbitrary/file.js';
   const code = 'arbitrary(code)';
@@ -47,7 +55,13 @@ describe('Minification:', () => {
   });
 
   it('passes file name, code, and source map to `uglify`', () => {
-    minify.withSourceMap(code, map, filename);
+    minify({
+      ...baseOptions,
+      code,
+      map,
+      filename,
+      config: {sourceMap: {includeSources: false}},
+    });
     expect(uglify.minify).toBeCalledWith(
       code,
       objectContaining({
@@ -59,29 +73,15 @@ describe('Minification:', () => {
     );
   });
 
-  it('passes code to `uglify` when minifying without source map', () => {
-    minify.noSourceMap(code);
-    expect(uglify.minify).toBeCalledWith(
-      code,
-      objectContaining({
-        sourceMap: {
-          content: undefined,
-          includeSources: false,
-        },
-      }),
-    );
-  });
-
   it('returns the code provided by uglify', () => {
     uglify.minify.mockReturnValue({code, map: '{}'});
-    const result = minify.withSourceMap('', getFakeMap(), '');
+    const result = minify(baseOptions);
     expect(result.code).toBe(code);
-    expect(minify.noSourceMap('')).toBe(code);
   });
 
   it('parses the source map object provided by uglify and sets the sources property', () => {
     uglify.minify.mockReturnValue({map: JSON.stringify(map), code: ''});
-    const result = minify.withSourceMap('', getFakeMap(), filename);
+    const result = minify({...baseOptions, filename});
     expect(result.map).toEqual({...map, sources: [filename]});
   });
 });

@@ -10,6 +10,7 @@
 
 'use strict';
 
+const IncrementalBundler = require('./IncrementalBundler');
 const MetroHmrServer = require('./HmrServer');
 const MetroServer = require('./Server');
 
@@ -31,9 +32,13 @@ import type {Server as HttpsServer} from 'https';
 import type {ConfigT, InputConfigT} from 'metro-config/src/configTypes.flow';
 import typeof Yargs from 'yargs';
 
-async function runMetro(config: InputConfigT): Promise<MetroServer> {
+async function getConfig(config: InputConfigT): Promise<ConfigT> {
   const defaultConfig = await getDefaultConfig(config.projectRoot);
-  const mergedConfig = mergeConfig(defaultConfig, config);
+  return mergeConfig(defaultConfig, config);
+}
+
+async function runMetro(config: InputConfigT): Promise<MetroServer> {
+  const mergedConfig = await getConfig(config);
 
   mergedConfig.reporter.update({
     type: 'initialize_started',
@@ -67,7 +72,11 @@ exports.createConnectMiddleware = async function(config: ConfigT) {
       attachWebsocketServer({
         httpServer,
         path: '/hot',
-        websocketServer: new MetroHmrServer(metroServer, config),
+        websocketServer: new MetroHmrServer(
+          metroServer.getBundler(),
+          metroServer.getCreateModuleId(),
+          config,
+        ),
       });
     },
     metroServer,
@@ -115,8 +124,18 @@ exports.runServer = async (
   serverApp.use(middleware);
 
   if (config.server.enableVisualizer) {
-    const {initializeVisualizerMiddleware} = require('metro-visualizer');
-    serverApp.use('/visualizer', initializeVisualizerMiddleware(metroServer));
+    let initializeVisualizerMiddleware;
+    try {
+      // eslint-disable-next-line import/no-extraneous-dependencies
+      ({initializeVisualizerMiddleware} = require('metro-visualizer'));
+    } catch (e) {
+      console.warn(
+        "'config.server.enableVisualizer' is enabled but the 'metro-visualizer' package was not found - have you installed it?",
+      );
+    }
+    if (initializeVisualizerMiddleware) {
+      serverApp.use('/visualizer', initializeVisualizerMiddleware(metroServer));
+    }
   }
 
   let httpServer;
@@ -220,7 +239,7 @@ exports.runBuild = async (
     const requestOptions: RequestOptions = {
       dev,
       entryFile: entry,
-      inlineSourceMap: sourceMap && !!sourceMapUrl,
+      inlineSourceMap: sourceMap && !sourceMapUrl,
       minify,
       platform,
       sourceMapUrl: sourceMap === false ? undefined : sourceMapUrl,
@@ -272,20 +291,21 @@ exports.buildGraph = async function(
     type = 'module',
   }: BuildGraphOptions,
 ): Promise<Graph<>> {
-  const metroServer = await runMetro(config);
+  const mergedConfig = await getConfig(config);
+
+  const bundler = new IncrementalBundler(mergedConfig);
 
   try {
-    return await metroServer.buildGraph(entries, {
+    return await bundler.buildGraphForEntries(entries, {
       ...MetroServer.DEFAULT_GRAPH_OPTIONS,
       customTransformOptions,
       dev,
       minify,
-      onProgress,
       platform,
       type,
     });
   } finally {
-    await metroServer.end();
+    bundler.end();
   }
 };
 

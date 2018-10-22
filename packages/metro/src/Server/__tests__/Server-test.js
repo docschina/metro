@@ -10,11 +10,14 @@
 
 'use strict';
 
+const ResourceNotFoundError = require('../../IncrementalBundler/ResourceNotFoundError');
+
 const {getDefaultValues} = require('metro-config/src/defaults');
 
 jest
   .mock('jest-worker', () => ({}))
   .mock('crypto')
+  .mock('fs')
   .mock('../symbolicate/symbolicate', () => ({
     createWorker: jest.fn().mockReturnValue(jest.fn()),
   }))
@@ -23,7 +26,6 @@ jest
   .mock('../../Assets')
   .mock('../../node-haste/DependencyGraph')
   .mock('metro-core/src/Logger')
-  .mock('../../lib/getAbsolutePath')
   .mock('../../lib/getPrependedScripts')
   .mock('../../lib/transformHelpers');
 
@@ -34,6 +36,7 @@ describe('processRequest', () => {
   let Server;
   let crypto;
   let dependencies;
+  let fs;
   let getAsset;
   let getPrependedScripts;
   let transformHelpers;
@@ -49,6 +52,7 @@ describe('processRequest', () => {
     Bundler = require('../../Bundler');
     Server = require('../');
     crypto = require('crypto');
+    fs = require('fs');
     getAsset = require('../../Assets').getAsset;
     getPrependedScripts = require('../../lib/getPrependedScripts');
     transformHelpers = require('../../lib/transformHelpers');
@@ -95,6 +99,7 @@ describe('processRequest', () => {
     );
 
   let requestHandler;
+  let changeHandler;
 
   beforeEach(() => {
     dependencies = new Map([
@@ -185,10 +190,18 @@ describe('processRequest', () => {
       ]),
     );
 
+    changeHandler = null;
     Bundler.prototype.getDependencyGraph = jest.fn().mockReturnValue(
       Promise.resolve({
         getHasteMap: jest.fn().mockReturnValue({on: jest.fn()}),
         load: jest.fn(() => Promise.resolve()),
+        getWatcher: jest.fn(() => ({
+          on(name, handler) {
+            if (name === 'change') {
+              changeHandler = handler;
+            }
+          },
+        })),
       }),
     );
 
@@ -202,6 +215,8 @@ describe('processRequest', () => {
 
     let i = 0;
     crypto.randomBytes.mockImplementation(() => `XXXXX-${i++}`);
+
+    fs.realpath = jest.fn((file, cb) => cb(null, '/root/foo.js'));
   });
 
   it('returns JS bundle source on request of *.bundle', async () => {
@@ -239,6 +254,25 @@ describe('processRequest', () => {
     );
   });
 
+  it('returns JS bundle with embedded delta bundle', async () => {
+    const response = await makeRequest(
+      requestHandler,
+      'mybundle.bundle?embedDelta=true',
+      null,
+    );
+
+    expect(response.body).toEqual(
+      [
+        'function () {require();}',
+        '__d(function() {entry();},0,[1],"mybundle.js");',
+        '__d(function() {foo();},1,[],"foo.js");',
+        'require(0);',
+        '//# sourceMappingURL=http://localhost:8081/mybundle.map?embedDelta=true',
+        '//# offsetTable={"pre":[[-1,0,24]],"delta":[[0,25,47],[1,73,39]],"post":[[2,113,11],[3,125,71]],"id":"XXXXX-0"}',
+      ].join('\n'),
+    );
+  });
+
   it('returns Last-Modified header on request of *.bundle', () => {
     return makeRequest(requestHandler, 'mybundle.bundle?runModule=true').then(
       response => {
@@ -261,6 +295,21 @@ describe('processRequest', () => {
       response => {
         expect(response.getHeader('Content-Length')).toEqual(
           '' + Buffer.byteLength(response.body),
+        );
+      },
+    );
+  });
+
+  it('returns 404 on request of *.bundle when resource does not exist', async () => {
+    fs.realpath = jest.fn((file, cb) =>
+      cb(new ResourceNotFoundError('unknown.bundle')),
+    );
+
+    return makeRequest(requestHandler, 'unknown.bundle?runModule=true').then(
+      response => {
+        expect(response.statusCode).toEqual(404);
+        expect(response.body).toEqual(
+          expect.stringContaining('ResourceNotFoundError'),
         );
       },
     );
@@ -406,9 +455,14 @@ describe('processRequest', () => {
     const promise1 = makeRequest(requestHandler, 'index.bundle');
     const promise2 = makeRequest(requestHandler, 'index.bundle');
 
-    resolveBuildGraph({
-      entryPoints: ['/root/mybundle.js'],
-      dependencies,
+    // We must wait for all synchronous promises *before*
+    // `getResolveDependencyFn` to resolve before we can be sure that
+    // `resolveBuildGraph` has been defined.
+    process.nextTick(() => {
+      resolveBuildGraph({
+        entryPoints: ['/root/mybundle.js'],
+        dependencies,
+      });
     });
 
     const [result1, result2] = await Promise.all([promise1, promise2]);
@@ -572,9 +626,11 @@ describe('processRequest', () => {
       const promise1 = makeRequest(requestHandler, 'index.delta');
       const promise2 = makeRequest(requestHandler, 'index.delta');
 
-      resolveBuildGraph({
-        entryPoints: ['/root/mybundle.js'],
-        dependencies,
+      process.nextTick(() => {
+        resolveBuildGraph({
+          entryPoints: ['/root/mybundle.js'],
+          dependencies,
+        });
       });
 
       const [result1, result2] = await Promise.all([promise1, promise2]);
@@ -609,11 +665,15 @@ describe('processRequest', () => {
 
     it('should hold on to request and inform on change', done => {
       jest.useRealTimers();
-      server.processRequest(req, res);
-      server.onFileChange('all', options.projectRoot + 'path/file.js');
-      res.end.mockImplementation(value => {
-        expect(value).toBe(JSON.stringify({changed: true}));
-        done();
+      process.nextTick(() => {
+        // Ensure that the dependency graph has been resolved and the change
+        // handler registered.
+        server.processRequest(req, res);
+        changeHandler();
+        res.end.mockImplementation(value => {
+          expect(value).toBe(JSON.stringify({changed: true}));
+          done();
+        });
       });
     });
 
@@ -621,7 +681,7 @@ describe('processRequest', () => {
       server.processRequest(req, res);
       req.emit('close');
       jest.runAllTimers();
-      server.onFileChange('all', options.projectRoot + 'path/file.js');
+      changeHandler();
       jest.runAllTimers();
       expect(res.end).not.toBeCalled();
     });
@@ -653,7 +713,7 @@ describe('processRequest', () => {
 
       server.processRequest(req, res);
       res.end.mockImplementation(value => {
-        expect(getAsset).toBeCalledWith('imgs/a.png', ['/root'], 'ios');
+        expect(getAsset).toBeCalledWith('imgs/a.png', '/root', 'ios');
         expect(value).toBe('i am image');
         done();
       });
@@ -671,7 +731,7 @@ describe('processRequest', () => {
 
       server.processRequest(req, res);
       res.end.mockImplementation(value => {
-        expect(getAsset).toBeCalledWith('imgs/a.png', ['/root'], 'ios');
+        expect(getAsset).toBeCalledWith('imgs/a.png', '/root', 'ios');
         expect(value).toBe(mockData.slice(0, 4));
         done();
       });
@@ -689,7 +749,7 @@ describe('processRequest', () => {
       res.end.mockImplementation(value => {
         expect(getAsset).toBeCalledWith(
           'imgs/\u{4E3B}\u{9875}/logo.png',
-          ['/root'],
+          '/root',
           undefined,
         );
         expect(value).toBe('i am image');
@@ -715,7 +775,6 @@ describe('processRequest', () => {
           dev: true,
           hot: false,
           minify: false,
-          onProgress: null,
           platform: undefined,
           type: 'module',
         },

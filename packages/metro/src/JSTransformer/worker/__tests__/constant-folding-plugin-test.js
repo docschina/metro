@@ -12,6 +12,8 @@
 'use strict';
 
 const constantFoldingPlugin = require('../constant-folding-plugin');
+const nullishCoalescingOperatorPlugin = require('@babel/plugin-syntax-nullish-coalescing-operator')
+  .default;
 
 const {compare} = require('../test-helpers');
 
@@ -109,7 +111,11 @@ describe('constant expressions', () => {
       var f = "truthy";
     `;
 
-    compare([constantFoldingPlugin], code, expected);
+    compare(
+      [constantFoldingPlugin, nullishCoalescingOperatorPlugin],
+      code,
+      expected,
+    );
   });
 
   it('can remode an if statement with a falsy constant test', () => {
@@ -329,5 +335,13 @@ describe('constant expressions', () => {
     ];
 
     nonChanged.forEach(test => compare([constantFoldingPlugin], test, test));
+  });
+
+  it('will not throw on evaluate exception', () => {
+    const nonChanged = `
+      Object({ 'toString': 0 } + '');
+    `;
+
+    compare([constantFoldingPlugin], nonChanged, nonChanged);
   });
 });

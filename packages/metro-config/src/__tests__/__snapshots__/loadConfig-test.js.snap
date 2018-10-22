@@ -36,9 +36,9 @@ Object {
       "otf",
       "ttf",
     ],
-    "assetTransforms": false,
     "blacklistRE": /\\(node_modules\\[\\\\/\\\\\\\\\\]react\\[\\\\/\\\\\\\\\\]dist\\[\\\\/\\\\\\\\\\]\\.\\*\\|website\\\\/node_modules\\\\/\\.\\*\\|heapCapture\\\\/bundle\\\\\\.js\\|\\.\\*\\\\/__tests__\\\\/\\.\\*\\)\\$/,
     "extraNodeModules": Object {},
+    "hasteImplModulePath": undefined,
     "platforms": Array [
       "ios",
       "android",
@@ -73,6 +73,7 @@ Object {
     "processModuleFilter": [Function],
   },
   "server": Object {
+    "enableVisualizer": false,
     "enhanceMiddleware": [Function],
     "port": 8080,
     "useGlobalHotkey": true,
@@ -84,17 +85,34 @@ Object {
     "babelTransformerPath": "metro/src/defaultTransformer",
     "dynamicDepsInPackages": "throwAtRuntime",
     "enableBabelRCLookup": true,
+    "enableBabelRuntime": true,
     "getTransformOptions": [Function],
+    "minifierConfig": Object {
+      "compress": Object {
+        "reduce_funcs": false,
+      },
+      "mangle": Object {
+        "toplevel": false,
+      },
+      "output": Object {
+        "ascii_only": true,
+        "quote_style": 3,
+        "wrap_iife": true,
+      },
+      "sourceMap": Object {
+        "includeSources": false,
+      },
+      "toplevel": false,
+    },
     "minifierPath": "metro-minify-uglify",
     "optimizationSizeLimit": 153600,
     "postMinifyProcess": [Function],
     "transformVariants": Object {
       "default": Object {},
     },
-    "workerPath": null,
+    "workerPath": "metro/src/DeltaBundler/Worker",
   },
   "transformerPath": "",
-  "watch": false,
   "watchFolders": Array [
     "/",
   ],
@@ -137,9 +155,9 @@ Object {
       "otf",
       "ttf",
     ],
-    "assetTransforms": false,
     "blacklistRE": /\\(node_modules\\[\\\\/\\\\\\\\\\]react\\[\\\\/\\\\\\\\\\]dist\\[\\\\/\\\\\\\\\\]\\.\\*\\|website\\\\/node_modules\\\\/\\.\\*\\|heapCapture\\\\/bundle\\\\\\.js\\|\\.\\*\\\\/__tests__\\\\/\\.\\*\\)\\$/,
     "extraNodeModules": Object {},
+    "hasteImplModulePath": undefined,
     "platforms": Array [
       "ios",
       "android",
@@ -174,6 +192,7 @@ Object {
     "processModuleFilter": [Function],
   },
   "server": Object {
+    "enableVisualizer": false,
     "enhanceMiddleware": [Function],
     "port": 8080,
     "useGlobalHotkey": true,
@@ -185,17 +204,34 @@ Object {
     "babelTransformerPath": "metro/src/defaultTransformer",
     "dynamicDepsInPackages": "throwAtRuntime",
     "enableBabelRCLookup": true,
+    "enableBabelRuntime": true,
     "getTransformOptions": [Function],
+    "minifierConfig": Object {
+      "compress": Object {
+        "reduce_funcs": false,
+      },
+      "mangle": Object {
+        "toplevel": false,
+      },
+      "output": Object {
+        "ascii_only": true,
+        "quote_style": 3,
+        "wrap_iife": true,
+      },
+      "sourceMap": Object {
+        "includeSources": false,
+      },
+      "toplevel": false,
+    },
     "minifierPath": "metro-minify-uglify",
     "optimizationSizeLimit": 153600,
     "postMinifyProcess": [Function],
     "transformVariants": Object {
       "default": Object {},
     },
-    "workerPath": null,
+    "workerPath": "metro/src/DeltaBundler/Worker",
   },
   "transformerPath": "",
-  "watch": false,
   "watchFolders": Array [
     "/",
   ],
